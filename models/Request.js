@@ -13,9 +13,22 @@ const RequestSchema = new mongoose.Schema({
   maritalStatus: { type: String },
   docTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'DocumentType', required: true },
   uploadedFileId: { type: mongoose.Schema.Types.ObjectId },
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+}, {
+  timestamps: true,
+  toJSON: { 
+    virtuals: true,
+    transform: function(doc, ret) {
+      // Convert timestamps to Philippine Time (UTC+8)
+      if (ret.createdAt) {
+        ret.createdAt = new Date(ret.createdAt.getTime() + (8 * 60 * 60 * 1000));
+      }
+      if (ret.updatedAt) {
+        ret.updatedAt = new Date(ret.updatedAt.getTime() + (8 * 60 * 60 * 1000));
+      }
+      return ret;
+    }
+  }
 });
 
 module.exports = mongoose.model('Request', RequestSchema);
