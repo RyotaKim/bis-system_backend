@@ -1,8 +1,10 @@
-router.post('/complaints', protect, adminOnly, adminController.createComplaint);
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/auth');
+
+// Create complaint (admin only)
+router.post('/complaints', protect, adminOnly, adminController.createComplaint);
 
 router.get('/dashboard', protect, adminOnly, adminController.dashboardStats);
 
