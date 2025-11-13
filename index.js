@@ -36,6 +36,26 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/document-types', documentTypeRoutes);
 
+// File download route
+app.get('/api/files/:id', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const { getFileStream } = require('./middleware/upload');
+    const { ObjectId } = require('mongodb');
+    
+    const fileId = new ObjectId(req.params.id);
+    const downloadStream = getFileStream(fileId);
+    
+    downloadStream.on('error', () => {
+      res.status(404).json({ message: 'File not found' });
+    });
+    
+    downloadStream.pipe(res);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

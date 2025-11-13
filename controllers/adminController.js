@@ -49,7 +49,17 @@ exports.dashboardStats = async (req, res) => {
 exports.getAllRequests = async (req, res) => {
   try {
     const requests = await Request.find().populate('docTypeId').sort({ createdAt: -1 });
-    res.json({ requests });
+    
+    // Add file URLs to each request
+    const requestsWithUrls = requests.map(request => {
+      const requestObj = request.toJSON();
+      if (requestObj.uploadedFileId) {
+        requestObj.idImageUrl = `/api/files/${requestObj.uploadedFileId}`;
+      }
+      return requestObj;
+    });
+    
+    res.json({ requests: requestsWithUrls });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -61,7 +71,14 @@ exports.getRequestById = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
-    res.json({ request });
+    
+    // Add file URL to response
+    const requestObj = request.toJSON();
+    if (requestObj.uploadedFileId) {
+      requestObj.idImageUrl = `/api/files/${requestObj.uploadedFileId}`;
+    }
+    
+    res.json({ request: requestObj });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -97,6 +114,18 @@ exports.deleteRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
+    
+    // Delete associated file from GridFS if exists
+    if (request.uploadedFileId) {
+      const { deleteFromGridFS } = require('../middleware/upload');
+      try {
+        await deleteFromGridFS(request.uploadedFileId);
+      } catch (err) {
+        console.error('Error deleting file from GridFS:', err);
+        // Continue even if file deletion fails
+      }
+    }
+    
     res.json({ message: 'Request deleted successfully', request });
   } catch (error) {
     res.status(500).json({ message: error.message });

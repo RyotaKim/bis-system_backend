@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { initGridFS } = require('./gridfs');
 require('dotenv').config();
 
 const connectDB = async () => {
@@ -7,12 +8,18 @@ const connectDB = async () => {
       ? process.env.MONGODB_TEST_URI 
       : process.env.MONGODB_URI;
 
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(mongoURI);
 
     console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+    
+    // Initialize GridFS immediately after connection
+    if (mongoose.connection.readyState === 1) {
+      initGridFS();
+    } else {
+      mongoose.connection.once('open', () => {
+        initGridFS();
+      });
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

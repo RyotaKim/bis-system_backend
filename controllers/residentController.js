@@ -10,6 +10,11 @@ exports.fileRequest = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
+    // Validate if file was uploaded
+    if (!req.file || !req.file.id) {
+      return res.status(400).json({ message: 'ID image is required' });
+    }
+
     const docType = await DocumentType.findById(docTypeId);
     if (!docType) {
       return res.status(404).json({ message: 'Document type not found' });
@@ -27,12 +32,19 @@ exports.fileRequest = async (req, res) => {
       age,
       maritalStatus,
       docTypeId,
-      uploadedFileId: req.file?.id || null,
+      uploadedFileId: req.file.id,
       status: 'pending'
     });
 
     await request.save();
-    res.status(201).json({ message: 'Request filed successfully', request, ref });
+    
+    // Include file URL in response
+    const fileUrl = `/api/files/${req.file.id}`;
+    res.status(201).json({ 
+      message: 'Request filed successfully', 
+      request: { ...request.toJSON(), idImageUrl: fileUrl }, 
+      ref 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
