@@ -4,9 +4,9 @@ const referenceService = require('../services/referenceService');
 
 exports.fileRequest = async (req, res) => {
   try {
-    const { fullName, contactNumber, address, purpose, eduAttainment, eduCourse, age, maritalStatus, docTypeId } = req.body;
+    const { lastName, firstName, middleInitial, contactNumber, address, purpose, eduAttainment, eduCourse, age, maritalStatus, docTypeId } = req.body;
 
-    if (!fullName || !contactNumber || !address || !purpose || !age || !docTypeId) {
+    if (!lastName || !firstName || !contactNumber || !address || !purpose || !age || !docTypeId) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -23,7 +23,9 @@ exports.fileRequest = async (req, res) => {
     const ref = await referenceService.generateRequestRef();
     const request = new Request({
       ref,
-      fullName,
+      lastName,
+      firstName,
+      middleInitial,
       contactNumber,
       address,
       purpose,
