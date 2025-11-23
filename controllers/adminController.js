@@ -48,13 +48,17 @@ exports.dashboardStats = async (req, res) => {
 
 exports.getAllRequests = async (req, res) => {
   try {
-    const requests = await Request.find().populate('docTypeId').sort({ createdAt: -1 });
+    const requests = await Request.find().populate('docTypeId').populate('approvedBy', 'name username').sort({ createdAt: -1 });
     
     // Add file URLs to each request
     const requestsWithUrls = requests.map(request => {
       const requestObj = request.toJSON();
       if (requestObj.uploadedFileId) {
         requestObj.idImageUrl = `/api/files/${requestObj.uploadedFileId}`;
+      }
+      // Add approvedByUser alias for frontend compatibility
+      if (requestObj.approvedBy) {
+        requestObj.approvedByUser = requestObj.approvedBy;
       }
       return requestObj;
     });
@@ -67,7 +71,7 @@ exports.getAllRequests = async (req, res) => {
 
 exports.getRequestById = async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id).populate('docTypeId');
+    const request = await Request.findById(req.params.id).populate('docTypeId').populate('approvedBy', 'name username');
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
@@ -76,6 +80,10 @@ exports.getRequestById = async (req, res) => {
     const requestObj = request.toJSON();
     if (requestObj.uploadedFileId) {
       requestObj.idImageUrl = `/api/files/${requestObj.uploadedFileId}`;
+    }
+    // Add approvedByUser alias for frontend compatibility
+    if (requestObj.approvedBy) {
+      requestObj.approvedByUser = requestObj.approvedBy;
     }
     
     res.json({ request: requestObj });
@@ -92,11 +100,19 @@ exports.updateRequestStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
+    const updateData = { status, updatedAt: Date.now() };
+    
+    // Add approvedBy and approvedAt when status is approved or rejected
+    if (status === 'approved' || status === 'rejected') {
+      updateData.approvedBy = req.user.id;
+      updateData.approvedAt = new Date();
+    }
+
     const request = await Request.findByIdAndUpdate(
       req.params.id,
-      { status, updatedAt: Date.now() },
+      updateData,
       { new: true }
-    ).populate('docTypeId');
+    ).populate('docTypeId').populate('approvedBy', 'name username');
 
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
@@ -134,8 +150,18 @@ exports.deleteRequest = async (req, res) => {
 
 exports.getAllComplaints = async (req, res) => {
   try {
-    const complaints = await Complaint.find().sort({ createdAt: -1 });
-    res.json({ complaints });
+    const complaints = await Complaint.find().populate('processedBy', 'name username').sort({ createdAt: -1 });
+    
+    // Add processedByUser alias for frontend compatibility
+    const complaintsWithUser = complaints.map(complaint => {
+      const complaintObj = complaint.toJSON();
+      if (complaintObj.processedBy) {
+        complaintObj.processedByUser = complaintObj.processedBy;
+      }
+      return complaintObj;
+    });
+    
+    res.json({ complaints: complaintsWithUser });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -143,11 +169,18 @@ exports.getAllComplaints = async (req, res) => {
 
 exports.getComplaintById = async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id);
+    const complaint = await Complaint.findById(req.params.id).populate('processedBy', 'name username');
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });
     }
-    res.json({ complaint });
+    
+    // Add processedByUser alias for frontend compatibility
+    const complaintObj = complaint.toJSON();
+    if (complaintObj.processedBy) {
+      complaintObj.processedByUser = complaintObj.processedBy;
+    }
+    
+    res.json({ complaint: complaintObj });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -161,11 +194,19 @@ exports.updateComplaintStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
+    const updateData = { status, updatedAt: Date.now() };
+    
+    // Add processedBy and resolvedAt when status is resolved
+    if (status === 'resolved') {
+      updateData.processedBy = req.user.id;
+      updateData.resolvedAt = new Date();
+    }
+
     const complaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { status, updatedAt: Date.now() },
+      updateData,
       { new: true }
-    );
+    ).populate('processedBy', 'name username');
 
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });

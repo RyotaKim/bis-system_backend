@@ -7,7 +7,9 @@ const ComplaintSchema = new mongoose.Schema({
   address: { type: String },
   complaintType: { type: String, required: true },
   description: { type: String, required: true },
-  status: { type: String, enum: ['pending', 'in_progress', 'resolved'], default: 'pending' }
+  status: { type: String, enum: ['pending', 'in_progress', 'resolved'], default: 'pending' },
+  processedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  resolvedAt: { type: Date, default: null }
 }, {
   timestamps: true,
   toJSON: { 

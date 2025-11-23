@@ -14,10 +14,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, requiredFields } = req.body;
     if (!name) return res.status(400).json({ message: 'Name required' });
 
-    const docType = new DocumentType({ name, description });
+    const docType = new DocumentType({ name, description, requiredFields });
     await docType.save();
     res.status(201).json({ message: 'Document type created', docType });
   } catch (error) {

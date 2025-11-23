@@ -15,7 +15,9 @@ const RequestSchema = new mongoose.Schema({
   maritalStatus: { type: String },
   docTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'DocumentType', required: true },
   uploadedFileId: { type: mongoose.Schema.Types.ObjectId },
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  approvedAt: { type: Date, default: null }
 }, {
   timestamps: true,
   toJSON: { 

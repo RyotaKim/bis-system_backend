@@ -20,6 +20,20 @@ exports.fileRequest = async (req, res) => {
       return res.status(404).json({ message: 'Document type not found' });
     }
 
+    // Validate education fields if required by document type
+    if (docType.requiredFields && docType.requiredFields.length > 0) {
+      if (docType.requiredFields.includes('eduAttainment') && !eduAttainment) {
+        return res.status(400).json({ 
+          message: `Educational Attainment is required for ${docType.name}` 
+        });
+      }
+      if (docType.requiredFields.includes('eduCourse') && !eduCourse) {
+        return res.status(400).json({ 
+          message: `Educational Course is required for ${docType.name}` 
+        });
+      }
+    }
+
     const ref = await referenceService.generateRequestRef();
     const request = new Request({
       ref,
