@@ -10,8 +10,16 @@ exports.getWeeklyRequestStats = async (req, res) => {
     const requestStats = await Request.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo } } },
       { $lookup: { from: 'documenttypes', localField: 'docTypeId', foreignField: '_id', as: 'docType' } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }, docType: { $arrayElemAt: ['$docType.name', 0] } }, count: { $sum: 1 } } },
-      { $sort: { '_id': 1 } }
+      { 
+        $group: { 
+          _id: { 
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            docType: { $arrayElemAt: ['$docType.name', 0] }
+          }, 
+          count: { $sum: 1 } 
+        } 
+      },
+      { $sort: { '_id.date': 1 } }
     ]);
 
     res.json({ requestStats });
@@ -27,8 +35,16 @@ exports.getComplaintResolutionRate = async (req, res) => {
 
     const complaintStats = await Complaint.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo } } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }, status: '$status' }, count: { $sum: 1 } } },
-      { $sort: { '_id': 1 } }
+      { 
+        $group: { 
+          _id: { 
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            status: '$status'
+          }, 
+          count: { $sum: 1 } 
+        } 
+      },
+      { $sort: { '_id.date': 1 } }
     ]);
 
     res.json({ complaintStats });
@@ -45,14 +61,30 @@ exports.getAllAnalytics = async (req, res) => {
     const requestStats = await Request.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo } } },
       { $lookup: { from: 'documenttypes', localField: 'docTypeId', foreignField: '_id', as: 'docType' } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }, docType: { $arrayElemAt: ['$docType.name', 0] } }, count: { $sum: 1 } } },
-      { $sort: { '_id': 1 } }
+      { 
+        $group: { 
+          _id: { 
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            docType: { $arrayElemAt: ['$docType.name', 0] }
+          }, 
+          count: { $sum: 1 } 
+        } 
+      },
+      { $sort: { '_id.date': 1 } }
     ]);
 
     const complaintStats = await Complaint.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo } } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }, status: '$status' }, count: { $sum: 1 } } },
-      { $sort: { '_id': 1 } }
+      { 
+        $group: { 
+          _id: { 
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            status: '$status'
+          }, 
+          count: { $sum: 1 } 
+        } 
+      },
+      { $sort: { '_id.date': 1 } }
     ]);
 
     const totalRequests = await Request.countDocuments();

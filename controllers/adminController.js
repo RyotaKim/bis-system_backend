@@ -48,7 +48,7 @@ exports.dashboardStats = async (req, res) => {
 
 exports.getAllRequests = async (req, res) => {
   try {
-    const requests = await Request.find().populate('docTypeId').populate('approvedBy', 'name username').sort({ createdAt: -1 });
+      const requests = await Request.find().populate('docTypeId').populate('approvedBy', 'name username').sort({ createdAt: -1 });
     
     // Add file URLs to each request
     const requestsWithUrls = requests.map(request => {
